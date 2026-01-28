@@ -1,65 +1,123 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <base target="_top">
-    <meta charset="utf-8">
-    <title>音ゲーランキング</title>
-    <style>
-      body { font-family: "Noto Sans JP", sans-serif; text-align: center; }
-      table { margin: 20px auto; border-collapse: collapse; width: 360px; }
-      th, td { border: 1px solid #aaa; padding: 8px; }
-      th { background-color: #eee; }
-      button, .btn-link { 
-        display: inline-block;
-        padding: 10px 20px; 
-        margin: 8px; 
-        background-color: #4CAF50; 
-        color: white; 
-        text-decoration: none; 
-        border-radius: 5px;
-        border: none;
-        font-size: 16px;
-        cursor: pointer;
-      }
-      .btn-reload { background-color: #eee; color: #333; border: 1px solid #aaa; }
-    </style>
-  </head>
+<head>
+  <meta charset="utf-8">
+  <base target="_top">
+  <style>
+    body {
+      background-color: #555;
+      color: white;
+      text-align: center;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .ranking-row {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      background: #444;
+    }
+    .you {
+      background: #d4af37;
+      color: black;
+      font-weight: bold;
+    }
+    .input-area {
+      margin-top: 30px;
+      padding: 20px;
+      background: #333;
+      border-radius: 10px;
+    }
+    input {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      width: 70%;
+      max-width: 240px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #00ffcc;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 40px;
+      background-color: #ffcc00;
+      padding: 15px 30px;
+      text-decoration: none;
+      color: #333;
+      border-radius: 30px;
+      font-weight: bold;
+    }
+  </style>
+</head>
 
-  <body>
-    <h1>Ranking</h1>
+<body>
 
-    <table id="rankTable">
-      <tr><th>順位</th><th>名前</th><th>スコア</th></tr>
+  <h1>TOP 5 RANKING</h1>
 
-      <? if (data && data.length) { ?>
-        <? for (var i = 0; i < data.length; i++) { ?>
-          <tr>
-            <td><?= i+1 ?></td>
-            <td><?= data[i].key ?></td>
-            <td><?= data[i].value ?></td>
-          </tr>
-        <? } ?>
-      <? } else { ?>
-        <tr><td colspan="3">ランキングはまだありません</td></tr>
-      <? } ?>
-    </table>
+  <div id="ranking">
+    <? for (let i = 0; i < rankingData.length; i++) { ?>
+      <div class="ranking-row <?= rankingData[i].isYou ? 'you' : '' ?>">
+        <?= i + 1 ?>位:
+        <?= rankingData[i].isYou
+          ? 'YOU (' + rankingData[i].name + ')'
+          : rankingData[i].name ?>
+        - <?= rankingData[i].score ?> pts
+      </div>
+    <? } ?>
+  </div>
 
-    <a href="<?= EXEC_URL ?>?page=main" target="_top" class="btn-link">▶ プレイ開始</a>
-    
-    <button class="btn-reload" onclick="reloadData()">🔄 更新</button>
+  <div class="input-area">
+    <p>自分の名前を変更する</p>
+    <input type="text" id="newName" placeholder="Enter your name">
+    <button onclick="updateName()">SET NAME</button>
+  </div>
 
-    <script>
-      const EXEC_URL = '<?= EXEC_URL ?>';
+  <a href="#" onclick="playAgain()" class="btn">PLAY AGAIN</a>
 
-      function reloadData() {
-        // ランキングの更新処理
-        google.script.run.withSuccessHandler(updateRanking).getLatestRanking();
-      }
+<script>
+  const SESSION_ID = "<?= sessionId ?>";
+  const EXEC_URL = "<?= EXEC_URL ?>";
 
-      function updateRanking(data) {
-        const table = document.getElementById('rankTable');
-        let html = '<tr><th>順位</th><th>名前</th><th>スコア</th></tr>';
-        if (data && data.length) {
-          data.forEach((d, i) => {
-            html += `<tr><td>${i+1}</td><td>${d.key}</td><td>${d.value}
+  function updateName() {
+    const newName = document.getElementById('newName').value.trim();
 
+    if (!newName) {
+      alert("名前を入力してください");
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.status === 'ok') {
+          alert("名前を更新しました！");
+          window.location.reload();
+        } else {
+          alert("更新に失敗しました");
+        }
+      })
+      .withFailureHandler(function(err) {
+        console.error(err);
+        alert("通信エラーが発生しました");
+      })
+      .updatePlayerName({
+        session_id: SESSION_ID,
+        name: newName
+      });
+  }
+
+  function playAgain() {
+    const freshUrl = EXEC_URL + "?page=main&t=" + Date.now();
+    window.top.location.href = freshUrl;
+  }
+</script>
+
+</body>
+</html>
