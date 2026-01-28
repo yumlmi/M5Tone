@@ -1,45 +1,50 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <base target="_top"> <meta charset="utf-8">
-  <style>
-    body { background-color: #000; color: #fff; text-align: center; font-family: sans-serif; }
-    .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
-    .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-    .controls { margin-top: 20px; }
-    button { padding: 10px 20px; font-size: 1rem; cursor: pointer; }
-  </style>
-</head>
-<body>
-  <h2>演奏中...</h2>
-  
-  <div class="video-container">
-    <iframe src="<?= videoUrl ?>" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-  </div>
+<script>
+  const sessionId = "<?= sessionId ?>";
+  const resultUrl = "<?= resultPageUrl ?>";
 
-  <div class="controls">
-    <p>演奏が終わったら下のボタンを押してください</p>
-    <button onclick="goToResult()">終了して結果を見る</button>
-  </div>
+  function goToResult() {
+    console.log("Redirecting to:", resultUrl);
+    window.top.location.href = resultUrl;
+  }
 
-  <script>
-    function goToResult() {
-      // 修正ポイント：window.location ではなく window.top.location を使う
-      const resultUrl = '<?= resultPageUrl ?>' + '&score=---'; // スコア表示用
-      
-      // もしセッションIDなどを引き継ぐ場合はここに追加
-      const finalUrl = resultUrl + '&session=<?= sessionId ?>';
-      
-      console.log("結果画面へ移動:", finalUrl);
-      window.top.location.href = finalUrl; 
-    }
+  function startSequence() {
+    console.log("Video started. Waiting 68 seconds...");
 
-    // 自動で結果画面に飛ばしたい場合も同様
-    /*
-    setTimeout(() => {
-      goToResult();
-    }, 180000); // 3分後に自動遷移など
-    */
-  </script>
-</body>
-</html>
+    setTimeout(function() {
+      console.log("68 seconds passed. Starting status check...");
+
+      // オーバーレイ表示
+      document.getElementById("overlay").style.display = "flex";
+      document.getElementById("status-text").innerText = "結果を集計中...";
+
+      const pollTimer = setInterval(function() {
+        console.log("Checking session status for:", sessionId);
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            console.log("Server Response:", res);
+
+            if (res && (res.ended === true || res.ended === "true")) {
+              clearInterval(pollTimer);
+
+              //  自動遷移しない
+              //  ボタンを表示するだけ
+              document.getElementById("status-text").innerText = "集計が完了しました";
+              document.getElementById("manualBtn").style.display = "block";
+            }
+          })
+          .withFailureHandler(function(err) {
+            console.error("GAS Error:", err);
+
+            // エラー時もボタンは出す
+            document.getElementById("status-text").innerText = "結果を表示できます";
+            document.getElementById("manualBtn").style.display = "block";
+          })
+          .checkSessionEnded(sessionId);
+      }, 2500);
+
+    }, 68000);
+  }
+
+  window.onload = startSequence;
+</script>
