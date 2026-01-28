@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <title>プレイ準備</title>
+    <style>
+      body { background-color: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 0; }
+      canvas { background: #006e54; display: block; margin: 20px auto; border: 2px solid #fff; max-width: 90vw; }
+      button { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; margin-top: 20px; }
+      button:active { background: #45a049; }
+    </style>
+  </head>
+  <body>
+
+    <canvas id="screen" width="600" height="400"></canvas>
+    <br>
+    <button onclick="startFromWeb()">▶ スタート (ブラウザ経由)</button>
+
+    <script>
+      // GASから渡された設定値
+      const EXEC_URL = '<?= EXEC_URL ?>';
+
+      // 画面の初期描画
+      window.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('screen');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#006e54';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+        ctx.font = '40px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('M5Tone Web Player', canvas.width/2, 180);
+        ctx.font = '20px Arial';
+        ctx.fillText('下のボタンを押すとゲームを開始します', canvas.width/2, 240);
+      });
+
+      function startFromWeb() {
+        console.log("Starting...");
+        
+        // fetchではなく、GAS内部通信を使用してCORSエラーを回避
+        google.script.run
+          .withSuccessHandler(function(jsonString) {
+            const json = JSON.parse(jsonString);
+            
+            if (json.status === 'ok') {
+              // notes.html（動画再生画面）へ遷移
+              const nextUrl = EXEC_URL + 
+                              '?page=notes' +
+                              '&videoUrl=' + encodeURIComponent(json.video_url) + 
+                              '&session=' + encodeURIComponent(json.session_id);
+              
+              // 枠(iframe)を突き破ってページ全体を切り替える
+              window.top.location.href = nextUrl;
+            } else {
+              alert('Error: ' + json.message);
+            }
+          })
+          .withFailureHandler(function(err) {
+            alert('サーバーとの通信に失敗しました: ' + err);
+          })
+          .startFromWebWithGAS(); // Code.gs に追加した関数を呼ぶ
+      }
+    </script>
+  </body>
+</html>
+

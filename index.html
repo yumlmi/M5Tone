@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <title>音ゲーランキング</title>
+    <style>
+      body { font-family: "Noto Sans JP", sans-serif; text-align: center; }
+      table { margin: 20px auto; border-collapse: collapse; width: 360px; }
+      th, td { border: 1px solid #aaa; padding: 8px; }
+      th { background-color: #eee; }
+      button, .btn-link { 
+        display: inline-block;
+        padding: 10px 20px; 
+        margin: 8px; 
+        background-color: #4CAF50; 
+        color: white; 
+        text-decoration: none; 
+        border-radius: 5px;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .btn-reload { background-color: #eee; color: #333; border: 1px solid #aaa; }
+    </style>
+  </head>
+
+  <body>
+    <h1>Ranking</h1>
+
+    <table id="rankTable">
+      <tr><th>順位</th><th>名前</th><th>スコア</th></tr>
+
+      <? if (data && data.length) { ?>
+        <? for (var i = 0; i < data.length; i++) { ?>
+          <tr>
+            <td><?= i+1 ?></td>
+            <td><?= data[i].key ?></td>
+            <td><?= data[i].value ?></td>
+          </tr>
+        <? } ?>
+      <? } else { ?>
+        <tr><td colspan="3">ランキングはまだありません</td></tr>
+      <? } ?>
+    </table>
+
+    <a href="<?= EXEC_URL ?>?page=main" target="_top" class="btn-link">▶ プレイ開始</a>
+    
+    <button class="btn-reload" onclick="reloadData()">🔄 更新</button>
+
+    <script>
+      const EXEC_URL = '<?= EXEC_URL ?>';
+
+      function reloadData() {
+        // ランキングの更新処理
+        google.script.run.withSuccessHandler(updateRanking).getLatestRanking();
+      }
+
+      function updateRanking(data) {
+        const table = document.getElementById('rankTable');
+        let html = '<tr><th>順位</th><th>名前</th><th>スコア</th></tr>';
+        if (data && data.length) {
+          data.forEach((d, i) => {
+            html += `<tr><td>${i+1}</td><td>${d.key}</td><td>${d.value}
+
