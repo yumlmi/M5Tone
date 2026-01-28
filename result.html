@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      background-color: #555;
+      color: white;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: rgba(0,0,0,0.2);
+      padding: 20px;
+      border-radius: 15px;
+    }
+    h1 { font-size: 2em; margin-bottom: 10px; }
+    .score-big {
+      font-size: 4em;
+      font-weight: bold;
+      color: #00ffcc;
+      margin: 20px 0;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 20px 0;
+      font-size: 1.2em;
+    }
+    .label { text-align: right; color: #ccc; }
+    .value { text-align: left; font-weight: bold; }
+    .ok { color: #00ff00; }
+    .ng { color: #ff4444; }
+    .btn {
+      display: inline-block;
+      padding: 15px 30px;
+      background-color: #00ffcc;
+      color: #333;
+      text-decoration: none;
+      border-radius: 30px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<? 
+  // ★ 未定義でも落ちない防御
+  var sid = (typeof sessionId !== 'undefined') ? sessionId : '';
+?>
+
+  <div class="container">
+    <h1>RESULT</h1>
+
+    <div class="score-big"><?= score ?></div>
+    
+    <div class="detail-grid">
+      <div class="label">PERFECT (OK):</div>
+      <div class="value ok"><?= okCount ?></div>
+      
+      <div class="label">WRONG (NG):</div>
+      <div class="value ng"><?= ngCount ?></div>
+      
+      <div class="label">MISS (TimeOut):</div>
+      <div class="value"><?= timeoutCount ?></div>
+    </div>
+
+    <hr style="border: 0.5px solid #777;">
+  
+    <a href="<?= EXEC_URL ?>?page=index&session=<?= sid ?>" class="btn">
+      VIEW RANKING
+    </a>
+  </div>
+
+</body>
+</html>
